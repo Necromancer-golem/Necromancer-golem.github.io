@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grid in Canvas</title>
+    <style>
+        canvas {
+            background-color: #f5f5f5;
+            display: block;
+            margin: 20px auto;
+        }
+		#restartBtn {
+            display: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            margin: 20px auto;
+            display: block;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="gridCanvas" width="500" height="500"></canvas>
+    <button id="restartBtn">Restart Game</button>
+    <script>
+        const canvas = document.getElementById('gridCanvas');
+        const ctx = canvas.getContext('2d');
+		const restartBtn = document.getElementById('restartBtn');
+        // Grid properties
+        const gridSize = 50; // Size of each grid square
+        const canvasWidth = canvas.width;
+        const canvasHeight = canvas.height;
+
+		
+		// Restart button event listener
+        restartBtn.addEventListener('click', () => {
+            
+            //restartBtn.style.display = 'none';
+			resetGame();
+        });
+
+        // Function to reset the game
+        function resetGame() {
+            init();
+            gameOver = false;
+            gameLoop();
+        }
+		
+        // Function to draw grid
+        function drawGrid() {
+            ctx.strokeStyle = '#ddd'; // Set grid line color
+            ctx.lineWidth = 1; // Set grid line width
+
+            // Draw vertical lines
+            for (let x = 0; x <= canvasWidth; x += gridSize) {
+                ctx.beginPath();
+                ctx.moveTo(x, 0);
+                ctx.lineTo(x, canvasHeight);
+                ctx.stroke();
+            }
+
+            // Draw horizontal lines
+            for (let y = 0; y <= canvasHeight; y += gridSize) {
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(canvasWidth, y);
+                ctx.stroke();
+            }
+        }
+	
+        // Draw the grid
+        drawGrid();
+		let matrix = [];
+		let tempMatrix = [];
+		let rows = 10;
+		let columns = 10;
+
+		// Initialize a 50x50 matrix filled with zeros
+		for (let i = 0; i < rows; i++) {
+			matrix[i] = [];
+			for (let j = 0; j < columns; j++) {
+				matrix[i][j] = 0;  // You can replace 0 with any other initial value
+			}
+		}
+		
+		for (let i = 0; i < rows; i++) {
+			tempMatrix[i] = [];
+			for (let j = 0; j < columns; j++) {
+				tempMatrix[i][j] = 0;  // You can replace 0 with any other initial value
+			}
+		}
+		
+		function deepCopy(matrix) {
+			return matrix.map(row => [...row]);
+		}
+
+		function keepKillBorn() {
+			let numberOfNeighbors = 0;
+			aliveCells = 0;
+			for (let i = 0; i < rows; i++) {
+				for (let j = 0; j < columns; j++) {
+					numberOfNeighbors = getNumberOfNeighbors(i, j);
+					if(matrix[i][j] == 1 && numberOfNeighbors < 2){
+						tempMatrix[i][j] = 0;
+					} else if(matrix[i][j] == 1 && numberOfNeighbors >=2 && numberOfNeighbors <=3){
+						tempMatrix[i][j] = 1;
+						aliveCells++;
+					} else if(matrix[i][j] == 1 && numberOfNeighbors > 3){
+						tempMatrix[i][j] = 0;
+					} else if(matrix[i][j] == 0 && numberOfNeighbors == 3){
+						aliveCells++;
+						tempMatrix[i][j] = 1;
+					}
+				}
+			}
+			matrix = deepCopy(tempMatrix);
+		}
+		function prettyPrintTheMatrix(){
+			for (let i = 0; i < 10; i++) {
+				let rowString = '';
+				for (let j = 0; j < 10; j++) {
+					// Format each element to be right-aligned within the specified width
+					rowString += matrix[i][j].toString().padStart(5, ' ') + ' ';
+				}
+				console.log(rowString);
+				}
+		}
+		function getNumberOfNeighbors(i, j){
+			let isFirstRow = true;
+			let isLastRow = true;
+			let isFirstColumn = true;
+			let isLastColumn = true;
+			let neighborsCounter = 0;
+			if(i != 0){// checking neighbors in the row above
+				isFirstRow = false;
+				if( matrix[i-1][j] == 1){
+					neighborsCounter++;
+				}
+			}
+			if(i != rows - 1){// checking neighbors in the row below
+				isLastRow = false;
+				if( matrix[i+1][j] == 1){
+					neighborsCounter++;
+				}
+			}
+			if(j != 0){// checking neighbors in the column to the left
+				isFirstColumn = false;
+				if( matrix[i][j-1] == 1){
+					neighborsCounter++;
+				}
+			}
+			if(j != columns - 1){// checking neighbors in the colomn to the right
+				isLastColumn = false;
+				if( matrix[i][j+1] == 1){
+					neighborsCounter++;
+				}
+			}
+			if( !isFirstRow && !isFirstColumn){// checking the neighbors in the top left corner
+				if( matrix[i-1][j-1] == 1){
+					neighborsCounter++;
+				}
+			}
+			if( !isLastRow && !isLastColumn){// checking the neighbors in the bottom right corner
+				if( matrix[i+1][j+1] == 1){
+					neighborsCounter++;
+				}
+			}
+			if( !isFirstRow && !isLastColumn){// checking the neighbors in the top right corner
+				if( matrix[i-1][j+1] == 1){
+					neighborsCounter++;
+				}
+			}
+			if( !isLastRow && !isFirstColumn){// checking the neighbors in the bottom left corner
+				if( matrix[i+1][j-1] == 1){
+					neighborsCounter++;
+				}
+			}
+			return neighborsCounter;
+		}
+		let aliveCells = 0;
+		for (let i = 0; i < rows; i++) {
+			for (let j = 0; j < columns; j++) {
+				let randomBinary = Math.floor(Math.random() * 2);
+				matrix[i][j] = randomBinary;
+				if(randomBinary == 1){
+					aliveCells++;
+				}
+			}
+		}
+		
+		let gameOver = false;
+		let lastFrameTime = 0;
+		const fps = 1; // Desired frames per second
+		const frameDuration = 1000 / fps; // Duration of each frame in milliseconds
+		function init(){
+			aliveCells = 0;
+			for (let i = 0; i < rows; i++) {
+				for (let j = 0; j < columns; j++) {
+					let randomBinary = Math.floor(Math.random() * 2);
+					matrix[i][j] = randomBinary;
+					if(randomBinary == 1){
+						aliveCells++;
+					}
+				}
+			}
+			
+			gameOver = false;
+			lastFrameTime = 0;
+
+		}
+
+		function gameLoop(timestamp) {
+            if (aliveCells == 0) return;
+			
+			if (timestamp - lastFrameTime >= frameDuration) {
+				lastFrameTime = timestamp;
+
+				// Game logic here
+
+				// Draw the player cube
+				
+				for (let i = 0; i < rows; i++) {
+					for (let j = 0; j < columns; j++) {
+						if( matrix[i][j] == 1){
+							ctx.fillStyle = 'black'; // Set the color to black
+							ctx.fillRect(i*50 + 1, j*50 + 1, 48, 48);
+						}else{
+							ctx.fillStyle = '#f5f5f5'; // Set the color to sort of grey
+							ctx.fillRect(i*50 + 1, j*50 + 1, 48, 48);
+						}
+					}
+				}
+				keepKillBorn();
+				//dsdfprettyPrintTheMatrix()
+				// Continue the game loop
+				
+			}
+			if (aliveCells > 0) requestAnimationFrame(gameLoop);
+        }
+		//
+        // Start the game loop
+        gameLoop();
+    </script>
+</body>
+</html>
