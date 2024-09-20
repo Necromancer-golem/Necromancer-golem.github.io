@@ -11,13 +11,31 @@
             margin: 20px auto;
         }
 		#restartBtn {
-            display: none;
-            padding: 10px 20px;
-            font-size: 16px;
-            margin: 20px auto;
-            display: block;
-            text-align: center;
-        }
+    display: none;
+    padding: 10px 20px;
+    font-size: 16px;
+    margin: 20px auto;
+    display: block;
+    text-align: center;
+    width: fit-content; /* Ensures the width adjusts to content */
+}
+
+/* Media Query for Mobile */
+@media (max-width: 600px) {
+    #restartBtn {
+        width: 100%;  /* Ensure it takes up full width on mobile */
+        max-width: 300px;  /* Limit the width */
+        box-sizing: border-box;  /* Ensure padding is considered in width */
+    }
+}
+
+/* Example of ensuring parent container is centered */
+.container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+}
     </style>
 </head>
 <body>
